@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breathe — Premium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;1,300&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="auroraCanvas"></canvas>
+<div class="noise-overlay"></div>
+
+<div class="page">
+
+  <header class="header">
+    <button class="back-btn" onclick="history.back()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Back
+    </button>
+    <div class="header-center">
+      <div class="header-title">breathe</div>
+      <div class="status-dot" id="statusDot"></div>
+    </div>
+    <button class="icon-btn" onclick="toggleStats()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="9" width="3" height="6" rx="1" fill="currentColor" opacity="0.5"/>
+        <rect x="6" y="5" width="3" height="10" rx="1" fill="currentColor" opacity="0.75"/>
+        <rect x="11" y="1" width="3" height="14" rx="1" fill="currentColor"/>
+      </svg>
+    </button>
+  </header>
+
+  <div class="stats-overlay hidden" id="statsOverlay" onclick="closeStatsIfOutside(event)">
+    <div class="stats-card">
+      <div class="stats-hd">Session</div>
+      <div class="stats-grid-4">
+        <div class="sitem"><div class="sval" id="sTotalBreaths">0</div><div class="slbl">Breaths</div></div>
+        <div class="sitem"><div class="sval" id="sTotalTime">0:00</div><div class="slbl">Time</div></div>
+        <div class="sitem"><div class="sval" id="sCalmScore">—</div><div class="slbl">Calm score</div></div>
+        <div class="sitem"><div class="sval" id="sBreathRate">—</div><div class="slbl">Breath/min</div></div>
+      </div>
+      <div class="history-label">Cycle history</div>
+      <div class="history-bars" id="historyBars"></div>
+      <button class="close-stats-btn" onclick="toggleStats()">Close</button>
+    </div>
+  </div>
+
+  <main class="main">
+
+    <div class="phase-section">
+      <div class="phase-eyebrow" id="phaseEyebrow">not started</div>
+      <h1 class="phase-name" id="phaseName">Ready</h1>
+      <p class="phase-sub" id="phaseSub">Choose your mood and begin your journey</p>
+    </div>
+
+    <div class="orb-stage" id="orbStage">
+      <canvas class="particle-canvas" id="particleCanvas" width="400" height="400"></canvas>
+      <svg class="orb-svg" id="orbSvg" viewBox="0 0 320 320">
+        <defs>
+          <radialGradient id="orbGrad" cx="38%" cy="30%" r="70%" fx="38%" fy="30%">
+            <stop offset="0%" stop-color="#d8b4fe" id="gs1"/>
+            <stop offset="40%" stop-color="#7c3aed" id="gs2"/>
+            <stop offset="100%" stop-color="#0f0720" id="gs3"/>
+          </radialGradient>
+          <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.5" id="gg1"/>
+            <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="loaderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f0abfc" id="lg1"/>
+            <stop offset="100%" stop-color="#818cf8" id="lg2"/>
+          </linearGradient>
+          <radialGradient id="shimGrad" cx="30%" cy="25%" r="55%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.20)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          </radialGradient>
+          <filter id="bigBlur"><feGaussianBlur stdDeviation="24"/></filter>
+        </defs>
+
+        <circle cx="160" cy="160" r="120" fill="url(#glowGrad)" filter="url(#bigBlur)" id="glowHalo"/>
+        <circle cx="160" cy="160" r="140" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+        <circle cx="160" cy="160" r="120" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+        <circle cx="160" cy="160" r="100" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="trackRing"/>
+        <circle cx="160" cy="160" r="100"
+          fill="none" stroke="url(#loaderGrad)" stroke-width="4"
+          stroke-dasharray="628.3" stroke-dashoffset="628.3"
+          stroke-linecap="round" transform="rotate(-90 160 160)" id="loaderRing"/>
+        <circle cx="160" cy="60" r="6" fill="#f0abfc" opacity="0" id="loaderDot"/>
+        <circle cx="160" cy="160" r="88" fill="url(#orbGrad)" id="mainOrb"/>
+        <circle cx="160" cy="160" r="88" fill="url(#shimGrad)"/>
+        <circle cx="160" cy="160" r="88" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>
+        <ellipse cx="138" cy="130" rx="24" ry="13" fill="rgba(255,255,255,0.14)" transform="rotate(-35,138,130)"/>
+        <ellipse cx="148" cy="122" rx="9" ry="4" fill="rgba(255,255,255,0.24)" transform="rotate(-35,148,122)"/>
+        <text x="160" y="153" text-anchor="middle" class="orb-num" id="orbNum">—</text>
+        <text x="160" y="176" text-anchor="middle" class="orb-unit" id="orbUnit">breathe</text>
+      </svg>
+    </div>
+
+    <div class="timer-row">
+      <div class="mini-pill">
+        <div class="mini-pill-lbl">Cycle</div>
+        <div class="mini-pill-val" id="cycleVal">— / —</div>
+      </div>
+      <div class="big-timer" id="sessionTimer">00:00</div>
+      <div class="mini-pill">
+        <div class="mini-pill-lbl">Phase</div>
+        <div class="mini-pill-val" id="phaseShort">—</div>
+      </div>
+    </div>
+
+    <div class="controls-row">
+      <button class="ctrl-stop" id="stopBtn" onclick="stopBreathing()" style="display:none" title="End">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <rect x="2" y="2" width="10" height="10" rx="2" fill="currentColor"/>
+        </svg>
+      </button>
+      <button class="ctrl-start" id="startBtn" onclick="startBreathing()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M4 2.5L11.5 7L4 11.5V2.5Z" fill="currentColor"/>
+        </svg>
+        Begin session
+      </button>
+      <button class="ctrl-pause hidden" id="pauseBtn" onclick="togglePause()" title="Pause">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" id="pauseIcon">
+          <rect x="2" y="1.5" width="3.5" height="11" rx="1.5" fill="currentColor"/>
+          <rect x="8.5" y="1.5" width="3.5" height="11" rx="1.5" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="section-label">Mood</div>
+    <div class="mood-row">
+      <button class="mood-chip active" onclick="setMood('focus',this)">🎯 Focus</button>
+      <button class="mood-chip" onclick="setMood('calm',this)">🌊 Calm</button>
+      <button class="mood-chip" onclick="setMood('sleep',this)">🌙 Sleep</button>
+      <button class="mood-chip" onclick="setMood('energy',this)">⚡ Energy</button>
+    </div>
+
+    <div class="settings-panel">
+      <button class="panel-hd" onclick="togglePanel()">
+        <span>Customize</span>
+        <svg id="chevron" width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="panel-body" id="panelBody" style="display:none">
+
+        <div class="sliders-grid">
+          <div class="sblock">
+            <label>Inhale <b id="inLabel">4s</b></label>
+            <input type="range" id="inDur" min="1" max="15" value="0" oninput="syncLabel('inDur','inLabel')">
+          </div>
+          <div class="sblock">
+            <label>Hold in <b id="h1Label">4s</b></label>
+            <input type="range" id="h1Dur" min="0" max="15" value="0" oninput="syncLabel('h1Dur','h1Label')">
+          </div>
+          <div class="sblock">
+            <label>Exhale <b id="exLabel">4s</b></label>
+            <input type="range" id="exDur" min="1" max="15" value="0" oninput="syncLabel('exDur','exLabel')">
+          </div>
+          <div class="sblock">
+            <label>Hold out <b id="h2Label">4s</b></label>
+            <input type="range" id="h2Dur" min="0" max="15" value="0" oninput="syncLabel('h2Dur','h2Label')">
+          </div>
+          <div class="sblock full">
+            <label>Cycles <b id="cycLabel">5</b></label>
+            <input type="range" id="cycleCount" min="1" max="30" value="5" oninput="syncLabel('cycleCount','cycLabel',true)">
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row-opt">
+          <span class="opt-label">Voice guide</span>
+          <div class="tog-wrap" onclick="toggleVoice()">
+            <div class="tog-track on" id="voiceTrack"><div class="tog-thumb"></div></div>
+            <span id="voiceLabel">On</span>
+          </div>
+        </div>
+
+        <div class="row-opt">
+          <span class="opt-label">Haptic pulse</span>
+          <div class="tog-wrap" onclick="toggleHaptic()">
+            <div class="tog-track" id="hapticTrack"><div class="tog-thumb"></div></div>
+            <span id="hapticLabel">Off</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="opt-label" style="margin-bottom:10px">Background sound</div>
+        <div class="sound-grid">
+          <button class="sound-tile active" onclick="setSound('none',this)"><span>🔇</span><span>None</span></button>
+          <button class="sound-tile" onclick="setSound('rain',this)"><span>🌧</span><span>Rain</span></button>
+          <button class="sound-tile" onclick="setSound('ocean',this)"><span>🌊</span><span>Ocean</span></button>
+          <button class="sound-tile" onclick="setSound('forest',this)"><span>🌲</span><span>Forest</span></button>
+          <button class="sound-tile" onclick="setSound('fire',this)"><span>🔥</span><span>Fire</span></button>
+          <button class="sound-tile" onclick="setSound('space',this)"><span>🪐</span><span>Space</span></button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row-opt">
+          <span class="opt-label">Volume</span>
+          <input type="range" id="volSlider" min="0" max="100" value="50" style="flex:1;max-width:140px" oninput="setVolume(this.value)">
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
